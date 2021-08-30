@@ -14,7 +14,7 @@ def scrape_all():
     browser = Browser('chrome', **executable_path, headless=True)
 
     news_title, news_paragraph= mars_news(browser)
-    hemisphere_image_urls=hemisphere(browser)
+    hemisphere_image_urls= hemisphere(browser)
 
     # Run all scraping functions and store results in dictionary
     data = {
@@ -100,39 +100,29 @@ def mars_facts():
     #browser.quit()
 
 def hemisphere(browser):
-            # 1. Use browser to visit the URL 
-    url = 'https://marshemispheres.com/'
-
+    ### this is my second option for code 
+    url='https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
     browser.visit(url)
-    hmtl=browser.html
-
-        # 2. Create a list to hold the images and titles.
     hemisphere_image_urls = []
-    img_href =[]
-    hemisphere={"img_url":[], "title":[]}
 
-        # 3. Write code to retrieve the image urls and titles for each hemisphere.
-    hemisphere_soup=soup(hmtl, "html.parser")
-    for link in hemisphere_soup.find_all("a", class_="itemLink product-item"):
-        if link.get("href") not in img_href:
-            img_href.append(link.get("href"))
-            
-    img_href.remove("#")
-    for x in img_href:
-        browser.visit(f'https://marshemispheres.com/{x}')
-        hemisphere_img_title=soup(browser.html,"html.parser").find("h2", class_="title").get_text()
-        #hemisphere_image_title.append(hemisphere_img_title)
-        for y in soup(browser.html,"html.parser").find_all("a"):
-            if y.get_text()=="Sample":
-                hemisphere_img_final=y.get("href")
-                url_img=f'https://marshemispheres.com/{hemisphere_img_final}'
-                #hemisphere_image_urls.append(f'https://marshemispheres.com/{hemisphere_img_final}')
-        
-        dic={"img_url":url_img,"title":hemisphere_img_title}
-        hemisphere["img_url"].append(url_img)
-        hemisphere["title"].append(hemisphere_img_title)
-        hemisphere_image_urls.append(dic)
-    browser.quit()
+    imgs_links= browser.find_by_css("a.product-item h3")
+    for x in range(len(imgs_links)):
+        hemisphere={}
+        # Find elements going to click link
+        #https://splinter.readthedocs.io/en/latest/finding.html
+        browser.find_by_css("a.product-item h3")[x].click()
+        # Find sample Image link
+        #https://splinter.readthedocs.io/en/latest/finding.html
+        sample_img= browser.find_link_by_text("Sample").first
+        hemisphere['img_url']=sample_img['href']
+        # Get hemisphere Title
+        # I was getting a builtin method error on the html site, this might be the reason
+        #https://www.reddit.com/r/flask/comments/dhteiv/builtin_method_title_of_str_object_at/
+        hemisphere['img_title']=browser.find_by_css("h2.title").text
+        #Add Objects to hemisphere_img_urls list
+        hemisphere_image_urls.append(hemisphere)
+        # Go Back
+        browser.back()
     return hemisphere_image_urls
 
 if __name__ == "__main__":
